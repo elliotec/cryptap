@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "momentum",
   "main": "main.js",
+  "watch": {
+    "build": "src/*.js"
+  },
   "scripts": {
     "test": "test",
+    "watch": "npm-watch",
     "build": "eslint src/** && babel src -d lib"
   },
   "repository": {
@@ -19,7 +23,8 @@
   "homepage": "https://github.com/elliotec/cryptap#readme",
   "dependencies": {
     "binance": "^1.1.2",
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "npm-watch": "^0.3.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
