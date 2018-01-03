@@ -24,8 +24,7 @@
   "dependencies": {
     "binance": "^1.1.2",
     "express": "^4.16.2",
-    "express-es6-template-engine": "^2.0.2",
-    "npm-watch": "^0.3.0"
+    "express-es6-template-engine": "^2.0.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -35,6 +34,7 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "eslint-plugin-standard": "^3.0.1",
+    "npm-watch": "^0.3.0"
   }
 }
