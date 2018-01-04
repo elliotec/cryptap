@@ -6,5 +6,15 @@
 </head>
 <body>
   <h1>${title}</h1>
+  <div id="money"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io()
+    socket.on('broadcast', (data) => {
+      console.log(data)
+      var html = JSON.stringify(data)
+      document.getElementById('money').innerHTML = html
+    })
+  </script>
 </body>
 </html>
