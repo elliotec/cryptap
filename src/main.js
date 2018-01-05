@@ -14,7 +14,10 @@ app.engine('html', es6Renderer)
 app.set('views', 'views')
 app.set('view engine', 'html')
 
-app.get('/', (req, res) => res.render('index', {locals: {title: state.kline.symbol}}))
+app.get('/', (req, res) => res.render('index', {locals: {
+  title: 'elan',
+  state
+}}))
 
 io.on('connection', (socket) => {
   binance.onKline('BNBBTC', '1m', (data) => {
