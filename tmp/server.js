@@ -42,7 +42,7 @@ app.use(_express2.default.static('lib'));
 
 app.get('/', function (req, res) {
   return res.render('index', {
-    locals: { title: 'coinage', state: state }
+    locals: { title: 'waddup', state: state }
   });
 });
 
@@ -50,34 +50,31 @@ io.on('connection', function (socket) {
   (0, _nodeFetch2.default)(topHundredCoins).then(function (res) {
     return res.json();
   }).then(function (json) {
-    return getRealTimeCoinData(json);
+    return getAllSymbols(json);
   });
 
-  function getRealTimeCoinData(data) {
-    state.symbols = data.map(function (coin) {
-      return coin.symbol;
-    });
+  function getAllSymbols(data) {
     data.map(function (coin) {
       var symbol = coin.symbol;
       state[symbol] = {};
       return binance.onKline(symbol + 'BTC', '5m', function (data) {
-        if (state[symbol] && state[symbol] != _extends({}, data.kline)) {
-          //eslint-disable-line
-          state[symbol] = _extends({}, data.kline);
-        }
+        state[symbol] = _extends({}, data.kline);
         var open = state[symbol].open;
         var close = state[symbol].close;
         var change = (close - open) / open * 100;
         var roundedChange = Number.parseFloat(change).toPrecision(4);
-        state[symbol].percentChange = roundedChange;
-
+        console.log(symbol + ': ' + roundedChange + '%');
         if (roundedChange > 1.5) {
-          state[symbol].alert = true;
+          console.log('Alert!');
         }
+        state.percentChange = roundedChange;
 
-        socket.emit('broadcast', state);
+        socket.emit('broadcast', { state: state });
       });
     });
+    // return data.map((coin) => {
+    //   return coin.symbol
+    // })
   }
 });
 
