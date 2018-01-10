@@ -4,6 +4,7 @@ import es6Renderer from 'express-es6-template-engine'
 import binanceApi from 'binance'
 import socketIo from 'socket.io'
 import fetch from 'node-fetch'
+import deepEqual from 'deep-equal'
 
 const state = {}
 const binance = new binanceApi.BinanceWS()
@@ -32,7 +33,7 @@ io.on('connection', (socket) => {
       const symbol = coin.symbol
       state[symbol] = {}
       return binance.onKline(`${symbol}BTC`, '5m', (data) => {
-        if (state[symbol] && state[symbol] != {...data.kline}) { //eslint-disable-line
+        if (state[symbol] && !deepEqual(state[symbol], {...data.kline})) {
           state[symbol] = {...data.kline}
         }
         const open = state[symbol].open
@@ -41,8 +42,10 @@ io.on('connection', (socket) => {
         const roundedChange = Number.parseFloat(change).toPrecision(4)
         state[symbol].percentChange = roundedChange
 
-        if (roundedChange > 1.5) {
-          state[symbol].alert = true
+        if (roundedChange > 2) {
+          state[symbol].alert = 'Pump!'
+        } else if (roundedChange < -2) {
+          state[symbol].alert = 'Dump!'
         }
 
         socket.emit('broadcast', state)

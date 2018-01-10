@@ -23,6 +23,7 @@
   "homepage": "https://github.com/elliotec/cryptap#readme",
   "dependencies": {
     "binance": "^1.1.2",
+    "deep-equal": "^1.0.1",
     "express": "^4.16.2",
     "express-es6-template-engine": "^2.0.2",
     "node-fetch": "^1.7.3",
