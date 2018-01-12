@@ -5,8 +5,10 @@ import binanceApi from 'binance'
 import socketIo from 'socket.io'
 import fetch from 'node-fetch'
 import deepEqual from 'deep-equal'
+// import nodemailer from 'nodemailer'
 
 const state = {}
+state.alerts = {}
 const binance = new binanceApi.BinanceWS()
 const app = express()
 const server = http.createServer(app)
@@ -22,6 +24,10 @@ app.get('/', (req, res) => res.render('index', {
   locals: { title: 'coinage', state }
 }))
 
+app.post('/form', (req, res) => {
+  res.send('You sent the name "' + req.body.name + '".')
+})
+
 io.on('connection', (socket) => {
   fetch(topHundredCoins)
     .then((res) => res.json())
@@ -32,7 +38,7 @@ io.on('connection', (socket) => {
     data.map((coin) => {
       const symbol = coin.symbol
       state[symbol] = {}
-      return binance.onKline(`${symbol}BTC`, '5m', (data) => {
+      return binance.onKline(`${symbol}ETH`, '5m', (data) => {
         if (state[symbol] && !deepEqual(state[symbol], {...data.kline})) {
           state[symbol] = {...data.kline}
         }
@@ -42,10 +48,23 @@ io.on('connection', (socket) => {
         const roundedChange = Number.parseFloat(change).toPrecision(4)
         state[symbol].percentChange = roundedChange
 
-        if (roundedChange > 2) {
-          state[symbol].alert = 'Pump!'
-        } else if (roundedChange < -2) {
-          state[symbol].alert = 'Dump!'
+        if (roundedChange > 3) {
+          state[symbol].alert = {
+            message: `${symbol} has INCREASED ${roundedChange}% in the last 5 minutes`,
+            symbol,
+            roundedChange
+          }
+        } else if (roundedChange < -3) {
+          state[symbol].alert = {
+            message: `${symbol} has DECREASED ${roundedChange}% in the last 5 minutes`,
+            symbol,
+            roundedChange
+          }
+        }
+
+        if (state[symbol].alert) {
+          state.alerts = {...state.alerts, ...state[symbol].alert}
+          console.log(state[symbol].alert)
         }
 
         socket.emit('broadcast', state)

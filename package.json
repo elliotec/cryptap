@@ -27,6 +27,7 @@
     "express": "^4.16.2",
     "express-es6-template-engine": "^2.0.2",
     "node-fetch": "^1.7.3",
+    "nodemailer": "^4.4.1",
     "socket.io": "^2.0.4"
   },
   "devDependencies": {
