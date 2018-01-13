@@ -42,19 +42,20 @@ io.on('connection', (socket) => {
         if (state[symbol] && !deepEqual(state[symbol], {...data.kline})) {
           state[symbol] = {...data.kline}
         }
+
         const open = state[symbol].open
         const close = state[symbol].close
         const change = (close - open) / open * 100
         const roundedChange = Number.parseFloat(change).toPrecision(4)
         state[symbol].percentChange = roundedChange
 
-        if (roundedChange > 3) {
+        if (roundedChange > 5) {
           state[symbol].alert = {
             message: `${symbol} has INCREASED ${roundedChange}% in the last 5 minutes`,
             symbol,
             roundedChange
           }
-        } else if (roundedChange < -3) {
+        } else if (roundedChange < -5) {
           state[symbol].alert = {
             message: `${symbol} has DECREASED ${roundedChange}% in the last 5 minutes`,
             symbol,
