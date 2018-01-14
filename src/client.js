@@ -1,9 +1,23 @@
 // io is defined by the socket io script tag in views/index.html
 const socket = io() // eslint-disable-line
+function formChange() { // eslint-disable-line
+  window.fetch('/form', {
+    method: 'post',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      interval: document.getElementById('interval').value,
+      symbol: document.getElementById('symbol').value,
+      percentChange: document.getElementById('percentChange').value
+    })
+  }).then((response) => {
+    console.log(response)
+  })
+}
 socket.on('broadcast', (json) => {
   const data = JSON.stringify(json)
   const symbols = json.symbols
-  // window.alert('')
   symbols.map((sym) => {
     // const symbol = json[sym].symbol
     // const change = json[sym].percentChange

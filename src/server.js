@@ -10,6 +10,9 @@ import dotenv from 'dotenv'
 
 const state = {}
 state.alerts = {}
+state.interval = '5m'
+state.symbol = 'ETH'
+state.percentChange = 2
 const binance = new binanceApi.BinanceWS()
 const app = express()
 const server = http.createServer(app)
@@ -21,13 +24,17 @@ app.engine('html', es6Renderer)
 app.set('views', 'views')
 app.set('view engine', 'html')
 app.use(express.static('lib'))
+app.use(express.json())
 
 app.get('/', (req, res) => res.render('index', {
   locals: { title: 'coinage', state }
 }))
 
 app.post('/form', (req, res) => {
-  res.send('You sent the name "' + req.body.name + '".')
+  console.log(req.body)
+  state.interval = req.body.interval
+  state.symbol = req.body.symbol
+  state.percentChange = req.body.percentChange
 })
 
 io.on('connection', (socket) => {
@@ -40,7 +47,7 @@ io.on('connection', (socket) => {
     data.map((coin) => {
       const symbol = coin.symbol
       state[symbol] = {}
-      return binance.onKline(`${symbol}ETH`, '5m', (data) => {
+      return binance.onKline(`${symbol}${state.symbol}`, `${state.interval}`, (data) => {
         if (state[symbol] && !deepEqual(state[symbol], {...data.kline})) {
           state[symbol] = {...data.kline}
         }
@@ -50,12 +57,12 @@ io.on('connection', (socket) => {
         const change = (close - open) / open * 100
         const roundedChange = Number.parseFloat(change).toPrecision(3)
         const currentTime = Date.now()
-        // const EMAIL_SEND_THRESHOLD = 5 * 60 * 1000
+        const EMAIL_SEND_THRESHOLD = 5 * 60 * 1000
         state[symbol].percentChange = roundedChange
 
-        if (roundedChange > 3 || roundedChange < -3) {
+        if (roundedChange > state.percentChange || roundedChange < -(state.percentChange)) {
           state[symbol].alert = {
-            message: `${symbol} has changed ${roundedChange}% in the last 5 minutes`,
+            message: `${symbol} has changed ${roundedChange}% in the last ${state.interval}`,
             symbol,
             roundedChange,
             timestamp: currentTime
@@ -64,12 +71,6 @@ io.on('connection', (socket) => {
 
         if (state[symbol].alert) {
           state.alerts = {...state.alerts, ...state[symbol].alert}
-          console.log(state[symbol].alert)
-
-          if (!state[symbol].alert.emailSentTime) {
-            state[symbol].alert.emailSentTime = currentTime
-          }
-          // if (state[symbol].alert.emailSentTime >= (currentTime - EMAIL_SEND_THRESHOLD)) {
           const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -83,12 +84,23 @@ io.on('connection', (socket) => {
             subject: state[symbol].alert.message,
             text: 'so are you gonna do something about it?'
           }
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) return console.error(error)
-            console.log(info.response)
-          })
+          console.log(state[symbol].alert)
+
+          if (!state[symbol].emailSentTime) {
+            transporter.sendMail(mailOptions, (error, info) => {
+              state[symbol].emailSentTime = currentTime
+              if (error) return console.error(error)
+              console.log(info.response)
+            })
+          }
+
+          if (state[symbol].emailSentTime && (currentTime - state[symbol].emailSentTime) >= EMAIL_SEND_THRESHOLD) {
+            transporter.sendMail(mailOptions, (error, info) => {
+              if (error) return console.error(error)
+              console.log(info.response)
+            })
+          }
         }
-        // }
 
         socket.emit('broadcast', state)
       })
