@@ -5,7 +5,8 @@ import binanceApi from 'binance'
 import socketIo from 'socket.io'
 import fetch from 'node-fetch'
 import deepEqual from 'deep-equal'
-// import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer'
+import dotenv from 'dotenv'
 
 const state = {}
 state.alerts = {}
@@ -15,6 +16,7 @@ const server = http.createServer(app)
 const io = socketIo(server)
 const topHundredCoins = 'https://api.coinmarketcap.com/v1/ticker/'
 
+dotenv.config()
 app.engine('html', es6Renderer)
 app.set('views', 'views')
 app.set('view engine', 'html')
@@ -46,27 +48,47 @@ io.on('connection', (socket) => {
         const open = state[symbol].open
         const close = state[symbol].close
         const change = (close - open) / open * 100
-        const roundedChange = Number.parseFloat(change).toPrecision(4)
+        const roundedChange = Number.parseFloat(change).toPrecision(3)
+        const currentTime = Date.now()
+        // const EMAIL_SEND_THRESHOLD = 5 * 60 * 1000
         state[symbol].percentChange = roundedChange
 
-        if (roundedChange > 5) {
+        if (roundedChange > 3 || roundedChange < -3) {
           state[symbol].alert = {
-            message: `${symbol} has INCREASED ${roundedChange}% in the last 5 minutes`,
+            message: `${symbol} has changed ${roundedChange}% in the last 5 minutes`,
             symbol,
-            roundedChange
-          }
-        } else if (roundedChange < -5) {
-          state[symbol].alert = {
-            message: `${symbol} has DECREASED ${roundedChange}% in the last 5 minutes`,
-            symbol,
-            roundedChange
+            roundedChange,
+            timestamp: currentTime
           }
         }
 
         if (state[symbol].alert) {
           state.alerts = {...state.alerts, ...state[symbol].alert}
           console.log(state[symbol].alert)
+
+          if (!state[symbol].alert.emailSentTime) {
+            state[symbol].alert.emailSentTime = currentTime
+          }
+          // if (state[symbol].alert.emailSentTime >= (currentTime - EMAIL_SEND_THRESHOLD)) {
+          const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: 'coinagenotifier@gmail.com',
+              pass: process.env.COINAGE_EMAIL_PASS
+            }
+          })
+          const mailOptions = {
+            from: 'coinagenotifier@gmail.com',
+            to: 'elliotecweb@gmail.com',
+            subject: state[symbol].alert.message,
+            text: 'so are you gonna do something about it?'
+          }
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) return console.error(error)
+            console.log(info.response)
+          })
         }
+        // }
 
         socket.emit('broadcast', state)
       })
