@@ -49,28 +49,32 @@ io.on('connection', (socket) => {
       state[symbol] = {}
       return binance.onKline(`${symbol}${state.symbol}`, `${state.interval}`, (data) => {
         if (state[symbol] && !deepEqual(state[symbol], {...data.kline})) {
-          state[symbol] = {...data.kline}
+          state[symbol] = {
+            ...state[symbol],
+            ...data.kline
+          }
         }
 
         const open = state[symbol].open
         const close = state[symbol].close
         const change = (close - open) / open * 100
         const roundedChange = Number.parseFloat(change).toPrecision(3)
-        const currentTime = Date.now()
         const EMAIL_SEND_THRESHOLD = 5 * 60 * 1000
         state[symbol].percentChange = roundedChange
 
         if (roundedChange > state.percentChange || roundedChange < -(state.percentChange)) {
-          state[symbol].alert = {
-            message: `${symbol} has changed ${roundedChange}% in the last ${state.interval}`,
-            symbol,
-            roundedChange,
-            timestamp: currentTime
+          state[symbol] = {
+            ...state[symbol],
+            alert: {
+              message: `${symbol} has changed ${roundedChange}% in the last ${state.interval}`,
+              symbol,
+              roundedChange,
+              timestamp: Date.now()
+            }
           }
         }
 
         if (state[symbol].alert) {
-          state.alerts = {...state.alerts, ...state[symbol].alert}
           const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -82,22 +86,29 @@ io.on('connection', (socket) => {
             from: 'coinagenotifier@gmail.com',
             to: 'elliotecweb@gmail.com',
             subject: state[symbol].alert.message,
-            text: 'so are you gonna do something about it?'
+            text: `${state[symbol].alert.message}, so are you gonna do something about it?`
           }
-          console.log(state[symbol].alert)
 
           if (!state[symbol].emailSentTime) {
+            const emailSentTime = Date.now()
+            state[symbol] = {
+              ...state[symbol],
+              emailSentTime
+            }
             transporter.sendMail(mailOptions, (error, info) => {
-              state[symbol].emailSentTime = currentTime
               if (error) return console.error(error)
-              console.log(info.response)
             })
-          }
-
-          if (state[symbol].emailSentTime && (currentTime - state[symbol].emailSentTime) >= EMAIL_SEND_THRESHOLD) {
+          } else if (
+            state[symbol].emailSentTime &&
+            (Date.now() - state[symbol].emailSentTime) >= EMAIL_SEND_THRESHOLD
+          ) {
+            const emailSentTime = Date.now()
+            state[symbol] = {
+              ...state[symbol],
+              emailSentTime
+            }
             transporter.sendMail(mailOptions, (error, info) => {
               if (error) return console.error(error)
-              console.log(info.response)
             })
           }
         }
