@@ -19,10 +19,11 @@ socket.on('broadcast', (json) => {
   const data = JSON.stringify(json)
   const symbols = json.symbols
   symbols.map((sym) => {
-    // const symbol = json[sym].symbol
-    // const change = json[sym].percentChange
-    // const html = `<h1>${symbol}</h1><p>${change}</p>`
-    // document.getElementById('money').insertAdjacentHTML('beforeend', html)
+    console.log(json)
+    const symbol = json[sym].symbol
+    const change = json[sym].percentChange
+    const html = `<h1>${symbol}</h1><p>${change}</p>`
+    document.getElementById('table').insertAdjacentHTML('beforeend', html)
   })
   document.getElementById('money').innerHTML = data
 })

@@ -8,11 +8,11 @@ import deepEqual from 'deep-equal'
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
 
-const state = {}
+var state = {}
 state.alerts = {}
 state.interval = '5m'
 state.symbol = 'ETH'
-state.percentChange = 2
+state.percentChange = 5
 const binance = new binanceApi.BinanceWS()
 const app = express()
 const server = http.createServer(app)
@@ -32,9 +32,12 @@ app.get('/', (req, res) => res.render('index', {
 
 app.post('/form', (req, res) => {
   console.log(req.body)
-  state.interval = req.body.interval
-  state.symbol = req.body.symbol
-  state.percentChange = req.body.percentChange
+  state = {
+    ...state,
+    interval: req.body.interval,
+    symbol: req.body.symbol,
+    percentChange: req.body.percentChange
+  }
 })
 
 io.on('connection', (socket) => {
@@ -97,6 +100,7 @@ io.on('connection', (socket) => {
             }
             transporter.sendMail(mailOptions, (error, info) => {
               if (error) return console.error(error)
+              console.log(info)
             })
           } else if (
             state[symbol].emailSentTime &&
@@ -109,6 +113,7 @@ io.on('connection', (socket) => {
             }
             transporter.sendMail(mailOptions, (error, info) => {
               if (error) return console.error(error)
+              console.log(info)
             })
           }
         }
