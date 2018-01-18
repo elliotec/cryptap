@@ -11,8 +11,8 @@ import dotenv from 'dotenv'
 var state = {}
 state.alerts = {}
 state.interval = '5m'
-state.symbol = 'ETH'
-state.percentChange = 5
+state.symbol = 'BTC'
+state.percentChange = 10
 const binance = new binanceApi.BinanceWS()
 const app = express()
 const server = http.createServer(app)
@@ -87,9 +87,9 @@ io.on('connection', (socket) => {
           })
           const mailOptions = {
             from: 'coinagenotifier@gmail.com',
-            to: 'elliotecweb@gmail.com',
+            to: 'elliotecweb@gmail.com evanlhatch@gmail.com',
             subject: state[symbol].alert.message,
-            text: `${state[symbol].alert.message}, so are you gonna do something about it?`
+            text: `${state[symbol].alert.message}, so what are you gonna do about it bitch?`
           }
 
           if (!state[symbol].emailSentTime) {
