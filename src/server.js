@@ -27,7 +27,7 @@ app.use(express.static('lib'))
 app.use(express.json())
 
 app.get('/', (req, res) => res.render('index', {
-  locals: { title: 'coinage', state }
+  locals: { title: 'Cryptick', state }
 }))
 
 app.post('/form', (req, res) => {
@@ -87,7 +87,7 @@ io.on('connection', (socket) => {
           })
           const mailOptions = {
             from: 'coinagenotifier@gmail.com',
-            to: 'elliotecweb@gmail.com evanlhatch@gmail.com',
+            to: 'elliotecweb@gmail.com, evanlhatch@gmail.com',
             subject: state[symbol].alert.message,
             text: `${state[symbol].alert.message}, so what are you gonna do about it bitch?`
           }
@@ -100,7 +100,7 @@ io.on('connection', (socket) => {
             }
             transporter.sendMail(mailOptions, (error, info) => {
               if (error) return console.error(error)
-              console.log(info)
+              console.log('New - ', info)
             })
           } else if (
             state[symbol].emailSentTime &&
