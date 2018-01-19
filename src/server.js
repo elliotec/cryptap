@@ -87,7 +87,7 @@ io.on('connection', (socket) => {
           })
           const mailOptions = {
             from: 'coinagenotifier@gmail.com',
-            to: 'elliotecweb@gmail.com, evanlhatch@gmail.com',
+            to: 'evanlhatch@gmail.com, elliotecweb@gmail.com',
             subject: state[symbol].alert.message,
             text: `${state[symbol].alert.message}, so what are you gonna do about it bitch?`
           }
